@@ -42,7 +42,7 @@ use std::task::{Context, Poll};
 
 use futures::future::{err, ok, LocalBoxFuture, Ready, TryFutureExt};
 
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{de::DeserializeOwned, Serialize, Deserialize};
 
 use actix_service::{Service, Transform};
 
@@ -57,6 +57,7 @@ use actix_web::dev::{MessageBody, ServiceRequest, ServiceResponse};
 use actix_web::error::{Error, ErrorBadRequest, Result};
 use actix_web::{FromRequest, HttpMessage, HttpRequest, HttpResponse, Responder};
 
+#[derive(Debug)]
 struct FlashCookie(Cookie<'static>);
 #[derive(Clone)]
 struct FlashCookieValue(String);
@@ -65,9 +66,21 @@ struct FlashCookieValue(String);
 #[derive(Debug)]
 pub struct Message<T>(T);
 
+#[derive(Deserialize)]
+struct ValuedMessage<T> {
+    #[serde(rename="_")]
+    value: T
+}
+
+#[derive(Serialize)]
+struct ValuedMessageRef<'a, T> {
+    #[serde(rename="_")]
+    value: &'a T
+}
+
 impl<T> FromRequest for Message<T>
 where
-    T: DeserializeOwned,
+    T: DeserializeOwned + Serialize,
 {
     type Config = ();
     type Future = Ready<Result<Self, Self::Error>>;
@@ -75,8 +88,9 @@ where
 
     fn from_request(req: &HttpRequest, _: &mut actix_web::dev::Payload) -> Self::Future {
         if let Some(cookie) = req.extensions().get::<FlashCookie>() {
-            if let Ok(inner) = serde_json::from_str(cookie.0.value()) {
-                return ok(Message(inner));
+            match serde_json::from_str(cookie.0.value()) {
+                Ok(ValuedMessage { value }) => { return ok(Message(value)); },
+                _ => {}
             }
         }
         err(ErrorBadRequest("Invalid/missing flash cookie"))
@@ -116,7 +130,7 @@ where
 
         let out = self.responder.respond_to(req).err_into().and_then(|mut res| async {
             if let Some(msg) = msg {
-                let json = serde_json::to_string(&msg.into_inner())?;
+                let json = serde_json::to_string(&ValuedMessageRef { value: &msg.0 })?;
                 res.extensions_mut().insert(FlashCookieValue(json));
             }
             Ok(res)

@@ -1,4 +1,4 @@
-use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer, Responder};
+use actix_web_v3::{web, App, HttpRequest, HttpResponse, HttpServer, Responder};
 
 async fn show_flash(flash: actix_flash::Message<String>) -> impl Responder {
     flash.into_inner()
