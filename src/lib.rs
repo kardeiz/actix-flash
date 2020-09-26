@@ -1,5 +1,11 @@
 /*!
-Flash message middleware for `actix-web` 2.0.
+Flash message middleware for `actix-web` 2.0 or 3.0.
+
+Supports `actix-web` 3.0 by default. For 2.0, use:
+
+```
+actix-flash = { version = "0.2", features = ["v2"], default-features = false }
+```
 
 For `actix-web` 1.0 support, check out [`actix-web-flash`](https://github.com/hatzel/actix-web-flash).
 
@@ -39,8 +45,15 @@ use futures::future::{err, ok, LocalBoxFuture, Ready, TryFutureExt};
 use serde::{de::DeserializeOwned, Serialize};
 
 use actix_service::{Service, Transform};
+
+#[cfg(feature = "v2")]
+pub(crate) use actix_web_v2 as actix_web;
+
+#[cfg(feature = "v3")]
+pub(crate) use actix_web_v3 as actix_web;
+
 use actix_web::cookie::{Cookie, CookieJar};
-use actix_web::dev::{BodySize, MessageBody, ResponseBody, ServiceRequest, ServiceResponse};
+use actix_web::dev::{MessageBody, ServiceRequest, ServiceResponse};
 use actix_web::error::{Error, ErrorBadRequest, Result};
 use actix_web::{FromRequest, HttpMessage, HttpRequest, HttpResponse, Responder};
 

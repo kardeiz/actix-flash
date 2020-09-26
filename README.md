@@ -3,7 +3,13 @@
 [![Docs](https://docs.rs/actix-flash/badge.svg)](https://docs.rs/crate/actix-flash/)
 [![Crates.io](https://img.shields.io/crates/v/actix-flash.svg)](https://crates.io/crates/actix-flash)
 
-Flash message middleware for `actix-web` 2.0.
+Flash message middleware for `actix-web` 2.0 or 3.0.
+
+Supports `actix-web` 3.0 by default. For 2.0, use:
+
+```rust
+actix-flash = { version = "0.2", features = ["v2"], default-features = false }
+```
 
 For `actix-web` 1.0 support, check out [`actix-web-flash`](https://github.com/hatzel/actix-web-flash).
 
@@ -36,6 +42,6 @@ async fn main() -> std::io::Result<()> {
 
 <hr/>
 
-Current version: 0.1.0
+Current version: 0.2.0
 
 License: MIT/Apache-2.0
